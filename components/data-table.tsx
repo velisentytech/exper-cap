@@ -16,7 +16,8 @@ import { motion, AnimatePresence } from "framer-motion";
 
 interface DataTableProps {
   search: string;
-  refreshTrigger: number; // Yeni prop ekledik
+  refreshTrigger: number;
+  setDataForWord: (data: ExcelData[]) => void; // <<< Burayı ekledik
 }
 
 interface ExcelData {
@@ -35,7 +36,7 @@ interface PaginationInfo {
   pageCount: number;
 }
 
-export function DataTable({ search, refreshTrigger }: DataTableProps) {
+export function DataTable({ search, refreshTrigger, setDataForWord }: DataTableProps) {
   const [data, setData] = useState<ExcelData[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
     total: 0,
@@ -51,7 +52,6 @@ export function DataTable({ search, refreshTrigger }: DataTableProps) {
   const fetchData = async () => {
     setLoading(true);
     try {
-      
       const params = new URLSearchParams({
         search: debouncedSearch,
         page: pagination.page.toString(),
@@ -62,6 +62,10 @@ export function DataTable({ search, refreshTrigger }: DataTableProps) {
       const result = await response.json();
      
       setData(result.exceldata);
+
+      // Dışarıya veriyi gönderiyoruz
+      setDataForWord(result.exceldata);
+
       setPagination(prev => ({
         ...prev,
         total: result.pagination.total,
@@ -78,7 +82,7 @@ export function DataTable({ search, refreshTrigger }: DataTableProps) {
 
   useEffect(() => {
     fetchData();
-  }, [pagination.page, pagination.pageSize, sortField, sortOrder, debouncedSearch, refreshTrigger]);// refreshTrigger'ı dependency olarak ekledik
+  }, [pagination.page, pagination.pageSize, sortField, sortOrder, debouncedSearch, refreshTrigger]);
 
   const handleSort = (field: string) => {
     if (sortField === field) {
