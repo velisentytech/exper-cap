@@ -6,8 +6,11 @@ import { useRouter } from "next/navigation";
 import { DataTable } from "@/components/data-table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { RotateCcw, FileText } from "lucide-react"; // FileText ikonu eklendi
+import { RotateCcw, FileText, Upload, Download } from "lucide-react";
 import { toast } from "sonner";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+
 
 export default function DashboardPage() {
   const [search, setSearch] = useState("");
@@ -16,6 +19,7 @@ export default function DashboardPage() {
   const router = useRouter();
 
   const [dataForWord, setDataForWord] = useState<any[]>([]); // Word için data tutulacak
+  const [dataTableData, setDataTableData] = useState<any[]>([]);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -41,6 +45,35 @@ export default function DashboardPage() {
     // Verileri localStorage ile taşıyoruz (veya başka yöntem de olur)
     localStorage.setItem("wordData", JSON.stringify(dataForWord));
     router.push("/word-preview");
+  };
+
+  const handleImportExcel = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const data = new Uint8Array(e.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: "array" });
+        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+        setDataTableData(jsonData);
+        toast.success("Excel verisi başarıyla yüklendi.");
+      };
+      reader.readAsArrayBuffer(file);
+    } catch (error) {
+      toast.error("Excel dosyası okunamadı.");
+    }
+  };
+
+  const handleExportToExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(dataForWord);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Veriler");
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    const file = new Blob([excelBuffer], { type: "application/octet-stream" });
+    saveAs(file, "veriler.xlsx");
   };
 
   return (
@@ -74,6 +107,26 @@ export default function DashboardPage() {
             <FileText className="mr-2 h-4 w-4" />
             Word'e Aktar
           </Button>
+             {/* Excel Yükle Butonu */}
+             <label htmlFor="excel-upload">
+            <input
+              type="file"
+              id="excel-upload"
+              accept=".xlsx, .xls"
+              onChange={handleImportExcel}
+              className="hidden"
+            />
+            <Button variant="outline" className="cursor-pointer">
+              <Upload className="mr-2 h-4 w-4" />
+              Excel Yükle
+            </Button>
+          </label>
+
+          {/* Excel'e Aktar Butonu */}
+          <Button onClick={handleExportToExcel} variant="outline">
+            <Download className="mr-2 h-4 w-4" />
+            Excel'e Aktar
+          </Button>
         </div>
 
         {/* Tablo */}
@@ -82,7 +135,13 @@ export default function DashboardPage() {
           refreshTrigger={refreshTrigger} 
           setDataForWord={setDataForWord} // Buradan gelen verileri saklıyoruz
         />
+         <div className="mt-6 flex justify-end">
+          <Button onClick={()=>router.push("/group")}>
+            Devam Et
+          </Button>
+        </div>
       </main>
+     
     </div>
   );
 }

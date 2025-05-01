@@ -76,3 +76,11 @@ model User {
   password  String
   createdAt DateTime @default(now())
 }
+
+model Basvuru {
+  id             Int      @id @default(autoincrement())
+  basvuruNo      String
+  unvan          String
+  basvuruTarihi  DateTime @default(now())
+  userId         Int
+}
