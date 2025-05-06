@@ -9,26 +9,46 @@ import {
   Packer,
   Paragraph,
   TextRun,
-  Table,
-  TableCell,
+  Table as DocxTable,
   TableRow,
+  TableCell,
   WidthType,
   BorderStyle,
   ShadingType,
   AlignmentType,
+  PageMargin,
+  Footer,
 } from "docx";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell as ShadcnTableCell,
+  TableHead,
+  TableHeader,
+  TableRow as ShadcnTableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 export default function WordPreviewPage() {
   const [wordData, setWordData] = useState<any[]>([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const router = useRouter();
 
+  // Verileri API'den çekme
   useEffect(() => {
-    const storedData = localStorage.getItem("wordData");
-    if (storedData) {
-      setWordData(JSON.parse(storedData));
-    }
+    fetch('/api/uploaded-excel')
+      .then(res => res.json())
+      .then(setWordData);
   }, []);
 
+  // Word dosyasını indirme fonksiyonu
   const handleDownloadWord = async () => {
     const today = new Date();
     const formattedDate = today.toLocaleDateString("tr-TR", {
@@ -37,80 +57,293 @@ export default function WordPreviewPage() {
       year: "numeric",
     });
 
-    const tableRows = wordData.map((item) => (
-      new TableRow({
-        children: [
-          new TableCell({
-            children: [
-              new Paragraph({
-                children: [
-                  new TextRun({ text: "🛠️ Makine Bilgileri", bold: true, size: 28 }),
-                ],
-                spacing: { after: 300 },
-              }),
-              new Paragraph({ text: `ID: ${item.id}`, spacing: { after: 100 } }),
-              new Paragraph({ text: `Makine Kodu: ${item.machine_code}`, spacing: { after: 100 } }),
-              new Paragraph({ text: `Makine Açıklaması: ${item.machine_desc}`, spacing: { after: 100 } }),
-              new Paragraph({ text: `Adet: ${item.adet}`, spacing: { after: 100 } }),
-              new Paragraph({ text: `Güç (kW): ${item.power}`, spacing: { after: 100 } }),
-              new Paragraph({ text: `Puan: ${item.puan}`, spacing: { after: 100 } }),
-            ],
-            shading: {
-              type: ShadingType.CLEAR,
-              color: "auto",
-              fill: "EDEDED", // Açık gri arka plan
-            },
-            margins: { top: 300, bottom: 300, left: 300, right: 300 },
-            borders: {
-              top: { style: BorderStyle.SINGLE, size: 2, color: "999999" },
-              bottom: { style: BorderStyle.SINGLE, size: 2, color: "999999" },
-              left: { style: BorderStyle.SINGLE, size: 2, color: "999999" },
-              right: { style: BorderStyle.SINGLE, size: 2, color: "999999" },
-            },
-          }),
-        ],
-      })
-    ));
-
     const doc = new Document({
       sections: [
         {
-          properties: {},
+          properties: {
+            page: {
+              margin: {
+                top: 1440, // 2 cm
+                right: 1440, // 2 cm
+                bottom: 1440, // 2 cm
+                left: 1440, // 2 cm
+              },
+            },
+          },
+          footers: {
+            default: new Footer({
+              children: [
+                new Paragraph({
+                  alignment: AlignmentType.CENTER,
+                  children: [
+                    new TextRun({
+                      text: `Sentytech © ${new Date().getFullYear()} | Sayfa `,
+                    }),
+                    new TextRun({
+                      children: ["PAGE"],
+                      field: "PAGE",
+                    }),
+                  ],
+                }),
+              ],
+            }),
+          },
           children: [
-            // Firma adı sağ üstte
+            // Firma Adı ve Başlık
             new Paragraph({
               children: [
                 new TextRun({
                   text: "Sentytech",
                   bold: true,
-                  color: "666666", // Gri renk
+                  color: "1B263B", // Profesyonel koyu mavi
                   size: 32,
+                  font: "Calibri",
                 }),
               ],
               alignment: AlignmentType.RIGHT,
               spacing: { after: 300 },
             }),
-            // Başlık
             new Paragraph({
               children: [
-                new TextRun({ text: "Makina Listesi", bold: true, size: 36 }),
+                new TextRun({
+                  text: "Makina Listesi Raporu",
+                  bold: true,
+                  size: 36,
+                  font: "Calibri",
+                  color: "1B263B",
+                }),
               ],
+              alignment: AlignmentType.CENTER,
               spacing: { after: 200 },
             }),
-            // Tarih
             new Paragraph({
               children: [
-                new TextRun({ text: `Oluşturulma Tarihi: ${formattedDate}`, italics: true, size: 24 }),
+                new TextRun({
+                  text: `Oluşturulma Tarihi: ${formattedDate}`,
+                  italics: true,
+                  size: 24,
+                  font: "Calibri",
+                  color: "4B5EAA",
+                }),
               ],
+              alignment: AlignmentType.CENTER,
               spacing: { after: 400 },
             }),
             // Tablo
-            new Table({
-              width: {
-                size: 100,
-                type: WidthType.PERCENTAGE,
-              },
-              rows: tableRows,
+            new DocxTable({
+              width: { size: 100, type: WidthType.PERCENTAGE },
+              rows: [
+                // Tablo Başlık Satırı
+                new TableRow({
+                  children: [
+                    new TableCell({
+                      children: [
+                        new Paragraph({
+                          children: [
+                            new TextRun({
+                              text: "Makine Kodu",
+                              bold: true,
+                              size: 24,
+                              font: "Calibri",
+                            }),
+                          ],
+                          alignment: AlignmentType.CENTER,
+                        }),
+                      ],
+                      shading: { fill: "E6E6E6", type: ShadingType.SOLID },
+                      borders: {
+                        top: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                        bottom: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                        left: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                        right: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                      },
+                    }),
+                    new TableCell({
+                      children: [
+                        new Paragraph({
+                          children: [
+                            new TextRun({
+                              text: "Makine Açıklaması",
+                              bold: true,
+                              size: 24,
+                              font: "Calibri",
+                            }),
+                          ],
+                          alignment: AlignmentType.CENTER,
+                        }),
+                      ],
+                      shading: { fill: "E6E6E6", type: ShadingType.SOLID },
+                      borders: {
+                        top: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                        bottom: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                        left: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                        right: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                      },
+                    }),
+                    new TableCell({
+                      children: [
+                        new Paragraph({
+                          children: [
+                            new TextRun({ text: "Adet", bold: true, size: 24, font: "Calibri" }),
+                          ],
+                          alignment: AlignmentType.CENTER,
+                        }),
+                      ],
+                      shading: { fill: "E6E6E6", type: ShadingType.SOLID },
+                      borders: {
+                        top: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                        bottom: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                        left: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                        right: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                      },
+                    }),
+                    new TableCell({
+                      children: [
+                        new Paragraph({
+                          children: [
+                            new TextRun({
+                              text: "Güç (kW)",
+                              bold: true,
+                              size: 24,
+                              font: "Calibri",
+                            }),
+                          ],
+                          alignment: AlignmentType.CENTER,
+                        }),
+                      ],
+                      shading: { fill: "E6E6E6", type: ShadingType.SOLID },
+                      borders: {
+                        top: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                        bottom: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                        left: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                        right: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                      },
+                    }),
+                    new TableCell({
+                      children: [
+                        new Paragraph({
+                          children: [
+                            new TextRun({ text: "Puan", bold: true, size: 24, font: "Calibri" }),
+                          ],
+                          alignment: AlignmentType.CENTER,
+                        }),
+                      ],
+                      shading: { fill: "E6E6E6", type: ShadingType.SOLID },
+                      borders: {
+                        top: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                        bottom: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                        left: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                        right: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                      },
+                    }),
+                  ],
+                }),
+                // Veri Satırları
+                ...wordData.map((item, index) =>
+                  new TableRow({
+                    children: [
+                      new TableCell({
+                        children: [
+                          new Paragraph({
+                            children: [
+                              new TextRun({ text: item.machine_code, size: 22, font: "Calibri" }),
+                            ],
+                            alignment: AlignmentType.CENTER,
+                          }),
+                        ],
+                        shading: { fill: index % 2 === 0 ? "F7F7F7" : "FFFFFF" },
+                        borders: {
+                          top: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                          bottom: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                          left: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                          right: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                        },
+                      }),
+                      new TableCell({
+                        children: [
+                          new Paragraph({
+                            children: [
+                              new TextRun({ text: item.machine_desc, size: 22, font: "Calibri" }),
+                            ],
+                            alignment: AlignmentType.CENTER,
+                          }),
+                        ],
+                        shading: { fill: index % 2 === 0 ? "F7F7F7" : "FFFFFF" },
+                        borders: {
+                          top: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                          bottom: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                          left: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                          right: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                        },
+                      }),
+                      new TableCell({
+                        children: [
+                          new Paragraph({
+                            children: [
+                              new TextRun({ text: item.adet.toString(), size: 22, font: "Calibri" }),
+                            ],
+                            alignment: AlignmentType.CENTER,
+                          }),
+                        ],
+                        shading: { fill: index % 2 === 0 ? "F7F7F7" : "FFFFFF" },
+                        borders: {
+                          top: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                          bottom: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                          left: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                          right: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                        },
+                      }),
+                      new TableCell({
+                        children: [
+                          new Paragraph({
+                            children: [
+                              new TextRun({ text: item.power.toString(), size: 22, font: "Calibri" }),
+                            ],
+                            alignment: AlignmentType.CENTER,
+                          }),
+                        ],
+                        shading: { fill: index % 2 === 0 ? "F7F7F7" : "FFFFFF" },
+                        borders: {
+                          top: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                          bottom: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                          left: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                          right: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                        },
+                      }),
+                      new TableCell({
+                        children: [
+                          new Paragraph({
+                            children: [
+                              new TextRun({ text: item.puan.toString(), size: 22, font: "Calibri" }),
+                            ],
+                            alignment: AlignmentType.CENTER,
+                          }),
+                        ],
+                        shading: { fill: index % 2 === 0 ? "F7F7F7" : "FFFFFF" },
+                        borders: {
+                          top: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                          bottom: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                          left: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                          right: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                        },
+                      }),
+                    ],
+                  })
+                ),
+              ],
+            }),
+            // Alt Bilgi
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: "Sentytech | Kapasite Hesabı",
+                  size: 20,
+                  font: "Calibri",
+                  color: "666666",
+                }),
+              ],
+              alignment: AlignmentType.CENTER,
+              spacing: { before: 400 },
             }),
           ],
         },
@@ -118,9 +351,18 @@ export default function WordPreviewPage() {
     });
 
     const blob = await Packer.toBlob(doc);
-    saveAs(blob, "makina_listesi.docx");
+    saveAs(blob, "kapasite_raporu.docx");
   };
 
+  // Dialogu açma ve kapama fonksiyonları
+  const handleOpenDialog = () => setIsDialogOpen(true);
+  const handleCloseDialog = () => setIsDialogOpen(false);
+  const handleConfirmDownload = () => {
+    handleDownloadWord();
+    handleCloseDialog();
+  };
+
+  // Veri yoksa yükleme ekranı
   if (!wordData.length) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
@@ -134,33 +376,73 @@ export default function WordPreviewPage() {
 
   return (
     <div className="flex flex-col items-center p-6 min-h-screen">
-      <h1 className="text-2xl font-bold mb-6">Word Önizleme</h1>
-
-      {/* Verilerin gösterimi */}
-      <div className="w-full max-w-4xl bg-white dark:bg-gray-800 rounded-md shadow-md p-6 space-y-6">
-        {wordData.map((item) => (
-          <div
-            key={item.id}
-            className="border border-gray-300 dark:border-gray-600 rounded-md p-4 bg-gray-100"
-          >
-            <p className="font-semibold text-lg mb-2">🛠️ Makine Bilgileri</p>
-            <p><strong>ID:</strong> {item.id}</p>
-            <p><strong>Makine Kodu:</strong> {item.machine_code}</p>
-            <p><strong>Makine Açıklaması:</strong> {item.machine_desc}</p>
-            <p><strong>Adet:</strong> {item.adet}</p>
-            <p><strong>Güç (kW):</strong> {item.power}</p>
-            <p><strong>Puan:</strong> {item.puan}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Word olarak indir butonu */}
-      <Button 
-        onClick={handleDownloadWord} 
+      <h1 className="text-2xl font-bold mb-6">Rapor Önizleme</h1>
+      <Button
+        onClick={handleOpenDialog}
         className="mt-6 bg-green-600 hover:bg-green-700 text-white"
       >
         Word Olarak İndir
       </Button>
+
+      {/* Shadcn UI Dialog */}
+      {isDialogOpen && (
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-white">
+                Uyarı
+              </DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <p className="text-gray-600 dark:text-gray-300">
+                Hesaplama verileri Word dosyasına aktarılacak ve daha sonra bu veriler üzerinde değişiklik yapılamayacak. Devam etmek istiyor musunuz?
+              </p>
+            </div>
+            <DialogFooter className="gap-2">
+              <Button
+                variant="outline"
+                onClick={handleCloseDialog}
+                className="border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+              >
+                Vazgeç
+              </Button>
+              <Button
+                onClick={handleConfirmDownload}
+                className="bg-blue-600 text-white hover:bg-blue-700"
+              >
+                Devam et
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Shadcn UI DataTable */}
+      <div className="w-full max-w-4xl bg-white dark:bg-gray-800 rounded-md shadow-md p-6 mt-6">
+        <Table>
+          <TableCaption>Puantaj</TableCaption>
+          <TableHeader>
+            <ShadcnTableRow>
+              <TableHead>Makine Kodu</TableHead>
+              <TableHead>Makine Açıklaması</TableHead>
+              <TableHead>Adet</TableHead>
+              <TableHead>Güç (kW)</TableHead>
+              <TableHead>Puan</TableHead>
+            </ShadcnTableRow>
+          </TableHeader>
+          <TableBody>
+            {wordData.map((item) => (
+              <ShadcnTableRow key={item.id}>
+                <ShadcnTableCell>{item.machine_code}</ShadcnTableCell>
+                <ShadcnTableCell>{item.machine_desc}</ShadcnTableCell>
+                <ShadcnTableCell>{item.adet}</ShadcnTableCell>
+                <ShadcnTableCell>{item.power}</ShadcnTableCell>
+                <ShadcnTableCell>{item.puan}</ShadcnTableCell>
+              </ShadcnTableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }

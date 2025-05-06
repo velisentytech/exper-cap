@@ -1,33 +1,19 @@
-"use client"
-import { BasvuruTable } from "@/components/basvuru/basvuru-table";
+"use client";
 
-export type Basvuru = {
-    id: number;
-    basvuruNo: string;
-    unvan: string;
-    basvuruTarihi: string;
-  };
+import BasvuruTable from "@/components/BasvuruTable";
+import BasvuruDialog from "@/components/BasvuruDialog";
+import { useState } from "react";
 
-async function getBasvurular(): Promise<Basvuru[]> {
-  try {
-    const res = await fetch(`/api/basvuru`, {
-      cache: "no-store",
-    });
-
-    if (!res.ok) throw new Error("Başvurular alınamadı");
-
-    return res.json();
-  } catch {
-    return [];
-  }
-}
-
-export default async function BasvuruPage() {
-  const initialData = await getBasvurular();
+export default function BasvuruPage() {
+  const [refreshKey, setRefreshKey] = useState(0);
 
   return (
-    <div className="container py-10">
-      <BasvuruTable initialData={initialData} />
+    <div className="p-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Başvurular</h1>
+        <BasvuruDialog onSuccess={() => setRefreshKey((prev) => prev + 1)} />
+      </div>
+      <BasvuruTable key={refreshKey} />
     </div>
   );
 }

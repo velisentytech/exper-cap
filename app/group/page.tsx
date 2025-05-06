@@ -1,11 +1,20 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"; // import Shadcn radio group
-import { Label } from "@/components/ui/label"; // opsiyonel, açıklama için
-import { toast } from "sonner"; // Sonner'ı import ediyoruz
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 type Group = {
   id: number;
@@ -37,39 +46,57 @@ export default function GroupPage() {
     if (selectedGroupId) {
       router.push(`/selectmachine?groupId=${selectedGroupId}`);
     } else {
-      //alert("Lütfen bir grup seçin.");
       toast.error("Lütfen bir grup seçiniz");
     }
   };
 
   return (
-    <div className="p-6 max-w-max mx-auto">
-      <h1 className="text-xl font-bold mb-4">Grup Seçimi</h1>
+    <div className="p-6 max-w-2xl mx-auto">
+      <Card>
+        <CardHeader>
+          <CardTitle>Grup Seçimi</CardTitle>
+          <CardDescription>
+            Lütfen bir grup seçerek devam ediniz.
+          </CardDescription>
+        </CardHeader>
 
-      <RadioGroup
-        value={selectedGroupId}
-        onValueChange={(val) => setSelectedGroupId(val)}
-        className="space-y-3"
-      >
-        {groups.map((group) => (
-          <div key={group.id} className="flex items-center space-x-3">
-            <RadioGroupItem value={group.id.toString()} id={`group-${group.id}`} />
-            <Label htmlFor={`group-${group.id}`}>
-              {group.description} (Katsayı: {group.katsayi})
-            </Label>
-          </div>
-        ))}
-      </RadioGroup>
+        <CardContent className="space-y-4">
+          <RadioGroup
+            value={selectedGroupId}
+            onValueChange={(val) => setSelectedGroupId(val)}
+            className="space-y-3"
+          >
+            {groups.map((group) => (
+              <div key={group.id} className="flex items-center space-x-3">
+                <RadioGroupItem
+                  value={group.id.toString()}
+                  id={`group-${group.id}`}
+                />
+                <Label
+                  htmlFor={`group-${group.id}`}
+                  className="text-base font-medium"
+                >
+                  {group.description}{" "}
+                 
+                </Label>
+              </div>
+            ))}
+          </RadioGroup>
 
-      {selectedGroupId && (
-        <div className="mt-6 p-4 bg-green-100 text-green-800 rounded">
-          Seçilen Grup ID: {selectedGroupId}
-        </div>
-      )}
+          {selectedGroupId && (
+            <div className="text-sm text-muted-foreground">
+              Seçilen Grup ID:{" "}
+              <span className="font-semibold">{selectedGroupId}</span>
+            </div>
+          )}
+        </CardContent>
 
-      <div className="mt-6 flex justify-end">
-        <Button onClick={handleContinue}>Devam Et</Button>
-      </div>
+        <CardFooter className="flex justify-end">
+          <Button onClick={handleContinue} disabled={!selectedGroupId}>
+            Devam Et
+          </Button>
+        </CardFooter>
+      </Card>
     </div>
   );
 }

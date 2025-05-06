@@ -25,7 +25,7 @@ export default function LoginPage() {
       const { token, email } = await response.json();
       localStorage.setItem("token", token);
       localStorage.setItem("email", email);
-      router.push("/dashboard");
+      router.push("/basvuru");
     } else {
       alert("Giriş başarısız.");
     }
