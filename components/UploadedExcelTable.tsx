@@ -66,15 +66,40 @@ const columns: ColumnDef<ExcelItem>[] = [
   },
 ];
 
-export default function UploadedExcelTable() {
+export default function UploadedExcelTable({
+  basvuruNo,
+  refreshKey,
+}: {
+  basvuruNo: string | null;
+  refreshKey: number;
+}) {
   const [data, setData] = useState<ExcelItem[]>([]);
   const [globalFilter, setGlobalFilter] = useState('');
 
-  useEffect(() => {
-    fetch('/api/uploaded-excel')
-      .then(res => res.json())
-      .then(setData);
-  }, []);
+  // useEffect(() => {
+  //   fetch('/api/uploaded-excel')
+  //     .then(res => res.json())
+  //     .then(setData);
+  // }, []);
+//   useEffect(() => {
+//   fetch('/api/uploaded-excel')
+//     .then(res => res.json())
+//     .then((excelData: ExcelItem[]) => {
+//       if (basvuruNo) {
+//         const filtered = excelData.filter(item => item.basvuruNo === basvuruNo);
+//         setData(filtered);
+//       } else {
+//         setData(excelData);
+//       }
+//     });
+// }, [basvuruNo]);
+
+useEffect(() => {
+  const query = basvuruNo ? `?basvuruNo=${basvuruNo}` : '';
+  fetch(`/api/uploaded-excel${query}`)
+    .then(res => res.json())
+    .then(setData);
+}, [basvuruNo,refreshKey]);
 
   const table = useReactTable({
     data,

@@ -42,10 +42,46 @@ export default function WordPreviewPage() {
   const router = useRouter();
 
   // Verileri API'den çekme
+  // useEffect(() => {
+  //   fetch('/api/uploaded-excel')
+  //     .then(res => res.json())
+  //     .then(setWordData);
+  // }, []);
+
   useEffect(() => {
+    // 1. API'den veriyi çek
     fetch('/api/uploaded-excel')
       .then(res => res.json())
       .then(setWordData);
+  
+    // 2. Kopyalamayı engelle
+    const handleCopy = (e: ClipboardEvent) => {
+      e.preventDefault();
+      alert("Kopyalama işlemi engellendi.");
+    };
+  
+    // 3. Sağ tıklamayı engelle
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+    };
+  
+    // 4. Ctrl+C, Cmd+C gibi kısayolları engelle
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "c") {
+        e.preventDefault();
+        alert("Kopyalama işlemi engellendi.");
+      }
+    };
+  
+    document.addEventListener("copy", handleCopy);
+    document.addEventListener("contextmenu", handleContextMenu);
+    document.addEventListener("keydown", handleKeyDown);
+  
+    return () => {
+      document.removeEventListener("copy", handleCopy);
+      document.removeEventListener("contextmenu", handleContextMenu);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, []);
 
   // Word dosyasını indirme fonksiyonu

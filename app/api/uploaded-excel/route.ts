@@ -1,11 +1,14 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import {prisma} from '@/lib/prisma';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const { searchParams } = new URL(req.url);
+    const basvuruNo = searchParams.get("basvuruNo");
     const data = await prisma.uploadedExcel.findMany({
+      where: basvuruNo ? { basvuruNo } : {},
       orderBy: { createdAt: 'desc' },
-      take: 100, // max 100 kayıt getir
+      take: 100, 
     });
 
     return NextResponse.json(data);

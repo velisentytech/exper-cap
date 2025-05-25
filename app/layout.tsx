@@ -27,8 +27,8 @@ export default function RootLayout({
           <header className="w-full p-4 flex justify-end">
             <ModeToggle />
           </header>
-          <main>{children}</main>
           <Toaster/>
+          <main>{children}</main>
         </ThemeProvider>
       </body>
     </html>

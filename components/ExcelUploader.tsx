@@ -3,8 +3,11 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 
+type ExcelUploaderProps = {
+  basvuruNo: string | null;
+};
 
-export default function ExcelUploader() {
+export default function ExcelUploader({ basvuruNo, onUploadSuccess }: { basvuruNo: string | null, onUploadSuccess?: () => void }) {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -13,20 +16,24 @@ export default function ExcelUploader() {
   };
 
   const handleUpload = async () => {
-    if (!file) return;
+    if (!file || !basvuruNo) {
+      toast.error("Dosya veya başvuru numarası eksik.");
+      return;
+    }
 
     setLoading(true);
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('basvuruNo', basvuruNo); // 💡 basvuruNo formData'ya eklendi
 
-    const res = await fetch('/api/upload-excel', {
+    const res = await fetch(`/api/upload-excel`, {
       method: 'POST',
       body: formData,
     });
 
+    onUploadSuccess?.();
     const result = await res.json();
     setLoading(false);
-    //alert(result.success ? 'Yükleme başarılı!' : 'Hata oluştu.');
     result.success ? toast.success("Yükleme başarılı!") : toast.error("Başarısız");
   };
 

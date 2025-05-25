@@ -16,6 +16,8 @@ export default function SelectMachinePage() {
   const [hasData, setHasData] = useState(false);
   const [selectedMachineGroupId, setSelectedMachineGroupId] = useState<number | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isPersonnelDialogOpen, setIsPersonnelDialogOpen] = useState(false);
+  const [personnelCount, setPersonnelCount] = useState("");
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -40,9 +42,9 @@ export default function SelectMachinePage() {
   };
 
   const handleContinue = () => {
-    // Word verisini localStorage'a al
     if (selectedMachineGroupId) {
       localStorage.setItem("wordData", JSON.stringify(selectedMachines));
+      localStorage.setItem("personnelCount", personnelCount);
       router.push("/word-preview");
     } else {
       router.push("/dashboard");
@@ -51,9 +53,19 @@ export default function SelectMachinePage() {
 
   const handleOpenConfirm = () => setIsConfirmOpen(true);
   const handleCloseConfirm = () => setIsConfirmOpen(false);
+
   const handleConfirm = () => {
-    handleCloseConfirm();
-    handleContinue();
+    setIsConfirmOpen(false);
+    setIsPersonnelDialogOpen(true); // 👈 ikinci dialogu aç
+  };
+
+  const handlePersonnelSubmit = () => {
+    if (!personnelCount || isNaN(Number(personnelCount))) {
+      alert("Lütfen geçerli bir personel sayısı giriniz.");
+      return;
+    }
+    setIsPersonnelDialogOpen(false);
+    handleContinue(); // yönlendir
   };
 
   const handleRefresh = () => {
@@ -123,16 +135,41 @@ export default function SelectMachinePage() {
         </Button>
       </div>
 
-      {/* Onay Dialogu */}
+      {/* 1. Onay Dialogu */}
       <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">Uyarı</DialogTitle>
           </DialogHeader>
-          <p className="py-4">Puantaj sonrasında değişiklik yapılamaz. İşlemi tamamlamak istediğinize emin misiniz?</p>
+          <p className="py-4">
+            Puantaj sonrasında değişiklik yapılamaz. İşlemi tamamlamak istediğinize emin misiniz?
+          </p>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={handleCloseConfirm}>Vazgeç</Button>
             <Button onClick={handleConfirm}>Devam et</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 2. Personel Sayısı Dialogu */}
+      <Dialog open={isPersonnelDialogOpen} onOpenChange={setIsPersonnelDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">Personel Sayısı</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <label className="block mb-2 font-medium">Lütfen personel sayısını giriniz:</label>
+            <Input
+              type="number"
+              min="1"
+              value={personnelCount}
+              onChange={(e) => setPersonnelCount(e.target.value)}
+              placeholder="Örn: 5"
+            />
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setIsPersonnelDialogOpen(false)}>Vazgeç</Button>
+            <Button onClick={handlePersonnelSubmit}>Devam et</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
